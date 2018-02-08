@@ -1,23 +1,15 @@
 package main
 
 import (
-	"fmt"
-
-	"github.com/valyala/fasthttp"
+  "fmt"
+  "net/http"
 )
 
-func handler(ctx *fasthttp.RequestCtx) {
-	fmt.Fprintf(ctx, "Hello, World")
+func handler(w http.ResponseWriter, r *http.Request) {
+  fmt.Fprintf(w, "Hello, World")
 }
 
 func main() {
-	requestHandler := func(ctx *fasthttp.RequestCtx) {
-		switch string(ctx.Path()) {
-		case "/":
-			handler(ctx)
-		default:
-			ctx.Error("Unsupported path", fasthttp.StatusNotFound)
-		}
-	}
-	fasthttp.ListenAndServe(":8080", requestHandler)
+  http.HandleFunc("/", handler) // ハンドラを登録してウェブページを表示させる
+  http.ListenAndServe(":8080", nil)
 }
