@@ -12,8 +12,8 @@ func TestOcelot(t *testing.T) {
 
 	o := New()
 
-	o.Get("/test", func(c *Context) error {
-		fmt.Fprintf(c.w, "test")
+	o.Get("/test", func(w http.ResponseWriter, r *http.Request) error {
+		fmt.Fprintf(w, "test")
 		return nil
 	})
 

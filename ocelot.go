@@ -3,52 +3,49 @@ package ocelot
 import "net/http"
 
 type (
+	// Ocelot is the top level framework instance.
 	Ocelot struct {
-		routes map[string]Route
+		routes map[string]route
 	}
 
-	Context struct {
-		r *http.Request
-		w http.ResponseWriter
-	}
-
-	Route struct {
+	// route has handler and matching information.
+	route struct {
 		method  string
 		path    string
 		handler HandlerFunc
 	}
 
-	HandlerFunc func(*Context) error
+	// HandlerFunc defines a function to server HTTP requests.
+	HandlerFunc func(http.ResponseWriter, *http.Request) error
 )
 
+// New creates new instance of Ocelot
 func New() (o *Ocelot) {
 	o = &Ocelot{
-		routes: map[string]Route{},
+		routes: map[string]route{},
 	}
 	return
 }
 
+// Get adds new route path with handler
 func (o *Ocelot) Get(path string, h HandlerFunc) {
-	o.routes["GET"+path] = Route{
+	o.routes["GET"+path] = route{
 		method:  "GET",
 		path:    path,
 		handler: h,
 	}
 }
 
+// ServeHTTP match registered routes against request path
 func (o *Ocelot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	c := Context{
-		r: r,
-		w: w,
-	}
 	for _, route := range o.routes {
 		if r.Method == route.method && r.URL.Path == route.path {
-			route.handler(&c)
+			route.handler(w, r)
 		}
 	}
 }
 
+// Start http server
 func (o *Ocelot) Start(address string) error {
-	http.HandleFunc("/", o.ServeHTTP)
-	return http.ListenAndServe(address, nil)
+	return http.ListenAndServe(address, o)
 }
