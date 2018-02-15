@@ -1,6 +1,7 @@
 package ocelot
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 )
@@ -45,9 +46,15 @@ func (o *Ocelot) Register(method string, path string, h HandlerFunc) {
 func (o *Ocelot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for _, route := range o.routes {
 		if r.Method == route.method && r.URL.Path == route.path {
-			route.handler(w, r)
+			if route.handler(w, r) != nil {
+				w.WriteHeader(500)
+				fmt.Fprintf(w, "500 Server Error")
+				return
+			}
 		}
 	}
+	w.WriteHeader(404)
+	fmt.Fprintf(w, "404 Not Found")
 }
 
 // Start http server
