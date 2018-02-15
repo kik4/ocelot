@@ -1,6 +1,9 @@
 package ocelot
 
-import "net/http"
+import (
+	"net/http"
+	"strings"
+)
 
 type (
 	// Ocelot is the top level framework instance.
@@ -27,10 +30,12 @@ func New() (o *Ocelot) {
 	return
 }
 
-// Get adds new route path with handler
-func (o *Ocelot) Get(path string, h HandlerFunc) {
-	o.routes["GET"+path] = route{
-		method:  "GET",
+// Register adds new route path with method and handler
+func (o *Ocelot) Register(method string, path string, h HandlerFunc) {
+	m := strings.ToUpper(method)
+
+	o.routes[m+path] = route{
+		method:  m,
 		path:    path,
 		handler: h,
 	}
