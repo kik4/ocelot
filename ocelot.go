@@ -49,8 +49,8 @@ func (o *Ocelot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if route.handler(w, r) != nil {
 				w.WriteHeader(500)
 				fmt.Fprintf(w, "500 Server Error")
-				return
 			}
+			return
 		}
 	}
 	w.WriteHeader(404)
