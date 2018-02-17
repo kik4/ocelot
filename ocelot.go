@@ -55,24 +55,25 @@ func (o *Ocelot) ServerError(h HandlerFunc) {
 
 // ServeHTTP match registered routes against request path
 func (o *Ocelot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	for _, route := range o.routes {
-		if r.Method == route.method && r.URL.Path == route.path {
-			err := route.handler(w, r)
-			if err != nil {
-				// respond server error
-				if h, ok := o.routes[pathToServerError]; ok {
-					w.WriteHeader(http.StatusInternalServerError)
-					h.handler(w, r)
-				} else {
-					http.Error(w, "500 internal server error", http.StatusInternalServerError)
-				}
-			}
-			return
-		}
+
+	// get handler
+	route, ok := o.routes[r.Method+r.URL.Path]
+	if !ok {
+		// respond not found
+		http.NotFound(w, r)
+		return
 	}
 
-	// respond not found
-	http.NotFound(w, r)
+	err := route.handler(w, r)
+	if err != nil {
+		// respond server error
+		if route, ok := o.routes[pathToServerError]; ok {
+			w.WriteHeader(http.StatusInternalServerError)
+			route.handler(w, r)
+		} else {
+			http.Error(w, "500 internal server error", http.StatusInternalServerError)
+		}
+	}
 }
 
 // Start http server
