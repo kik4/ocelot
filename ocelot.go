@@ -42,13 +42,27 @@ func (o *Ocelot) Register(method string, path string, h HandlerFunc) {
 	}
 }
 
+// RegisterServerError adds new route path with method and handler
+func (o *Ocelot) RegisterServerError(h HandlerFunc) {
+	p := "ServerError"
+	o.routes[p] = route{
+		path:    p,
+		handler: h,
+	}
+}
+
 // ServeHTTP match registered routes against request path
 func (o *Ocelot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for _, route := range o.routes {
 		if r.Method == route.method && r.URL.Path == route.path {
-			if route.handler(w, r) != nil {
+			err := route.handler(w, r)
+			if err != nil {
 				w.WriteHeader(500)
-				fmt.Fprintf(w, "500 Server Error")
+				if h, ok := o.routes["ServerError"]; ok {
+					h.handler(w, r)
+				} else {
+					fmt.Fprintf(w, "500 Server Error")
+				}
 			}
 			return
 		}
