@@ -24,6 +24,7 @@ type (
 
 const (
 	pathToServerError string = "_ServerError"
+	pathToNotFound    string = "_NotFound"
 )
 
 // New creates new instance of Ocelot
@@ -53,6 +54,14 @@ func (o *Ocelot) ServerError(h HandlerFunc) {
 	}
 }
 
+// NotFound adds handler called when page not found
+func (o *Ocelot) NotFound(h HandlerFunc) {
+	o.routes[pathToNotFound] = route{
+		path:    pathToNotFound,
+		handler: h,
+	}
+}
+
 // ServeHTTP match registered routes against request path
 func (o *Ocelot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
@@ -60,7 +69,12 @@ func (o *Ocelot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	route, ok := o.routes[r.Method+r.URL.Path]
 	if !ok {
 		// respond not found
-		http.NotFound(w, r)
+		if route, ok := o.routes[pathToNotFound]; ok {
+			w.WriteHeader(http.StatusNotFound)
+			route.handler(w, r)
+		} else {
+			http.NotFound(w, r)
+		}
 		return
 	}
 

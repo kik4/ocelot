@@ -78,12 +78,29 @@ func TestNotFound(t *testing.T) {
 	// set Ocelot and route
 	o := New()
 
-	// test error response
+	// test response
 	req := httptest.NewRequest("GET", "/notfound", nil)
 	rec := httptest.NewRecorder()
 	o.ServeHTTP(rec, req)
 	// check result
 	if rec.Code != http.StatusNotFound {
 		t.Error(rec.Code)
+	}
+
+	// notfound handler
+	o.NotFound(func(w http.ResponseWriter, r *http.Request) error {
+		fmt.Fprintf(w, "notfound handler registered")
+		return nil
+	})
+
+	// test response
+	rec2 := httptest.NewRecorder()
+	o.ServeHTTP(rec2, req)
+	// check result
+	if rec.Code != http.StatusNotFound {
+		t.Error(rec.Code)
+	}
+	if rec.Body.String() == rec2.Body.String() || rec2.Body.String() != "notfound handler registered" {
+		t.Error(rec.Body.String())
 	}
 }
