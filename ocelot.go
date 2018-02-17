@@ -1,7 +1,6 @@
 package ocelot
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 )
@@ -23,6 +22,10 @@ type (
 	HandlerFunc func(http.ResponseWriter, *http.Request) error
 )
 
+const (
+	pathToServerError string = "_ServerError"
+)
+
 // New creates new instance of Ocelot
 func New() (o *Ocelot) {
 	o = &Ocelot{
@@ -42,11 +45,10 @@ func (o *Ocelot) Register(method string, path string, h HandlerFunc) {
 	}
 }
 
-// RegisterServerError adds new route path with method and handler
-func (o *Ocelot) RegisterServerError(h HandlerFunc) {
-	p := "ServerError"
-	o.routes[p] = route{
-		path:    p,
+// ServerError adds handler called when error occured
+func (o *Ocelot) ServerError(h HandlerFunc) {
+	o.routes[pathToServerError] = route{
+		path:    pathToServerError,
 		handler: h,
 	}
 }
@@ -57,18 +59,20 @@ func (o *Ocelot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if r.Method == route.method && r.URL.Path == route.path {
 			err := route.handler(w, r)
 			if err != nil {
-				w.WriteHeader(500)
-				if h, ok := o.routes["ServerError"]; ok {
+				// respond server error
+				if h, ok := o.routes[pathToServerError]; ok {
+					w.WriteHeader(http.StatusInternalServerError)
 					h.handler(w, r)
 				} else {
-					fmt.Fprintf(w, "500 Server Error")
+					http.Error(w, "500 internal server error", http.StatusInternalServerError)
 				}
 			}
 			return
 		}
 	}
-	w.WriteHeader(404)
-	fmt.Fprintf(w, "404 Not Found")
+
+	// respond not found
+	http.NotFound(w, r)
 }
 
 // Start http server
