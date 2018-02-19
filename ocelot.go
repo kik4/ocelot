@@ -23,8 +23,7 @@ type (
 )
 
 const (
-	pathToServerError string = "_ServerError"
-	pathToNotFound    string = "_NotFound"
+	pathToNotFound string = "_NotFound"
 )
 
 // New creates new instance of Ocelot
