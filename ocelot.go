@@ -19,7 +19,7 @@ type (
 	}
 
 	// HandlerFunc defines a function to server HTTP requests.
-	HandlerFunc func(http.ResponseWriter, *http.Request) error
+	HandlerFunc func(http.ResponseWriter, *http.Request)
 )
 
 const (
@@ -42,14 +42,6 @@ func (o *Ocelot) Register(method string, path string, h HandlerFunc) {
 	o.routes[m+path] = route{
 		method:  m,
 		path:    path,
-		handler: h,
-	}
-}
-
-// ServerError adds handler called when error occured
-func (o *Ocelot) ServerError(h HandlerFunc) {
-	o.routes[pathToServerError] = route{
-		path:    pathToServerError,
 		handler: h,
 	}
 }
@@ -78,16 +70,8 @@ func (o *Ocelot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := route.handler(w, r)
-	if err != nil {
-		// respond server error
-		if route, ok := o.routes[pathToServerError]; ok {
-			w.WriteHeader(http.StatusInternalServerError)
-			route.handler(w, r)
-		} else {
-			http.Error(w, "500 internal server error", http.StatusInternalServerError)
-		}
-	}
+	// call handler
+	route.handler(w, r)
 }
 
 // Start http server
